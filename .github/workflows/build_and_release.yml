@@ -1,14 +1,16 @@
-name: Build & Release Executable (PyInstaller + NSIS)
+name: Build & Release Executable (PyInstaller)
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*' # Se déclenche au push d'un tag comme v1.0.0
-  workflow_dispatch: # Permet de lancer la compilation manuellement depuis GitHub
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Compilation Windows (Exe + Installateur NSIS)
+    name: Compilation Windows Exe (Dossier compiled)
     runs-on: windows-latest
     permissions:
       contents: write
@@ -27,33 +29,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
 
-      - name: Compilation de l'application avec PyInstaller
+      - name: Compilation de l'application dans le dossier compiled
         run: |
-          pyinstaller --onefile --windowed --name MSG_Windows launcher.py
+          pyinstaller --onefile --windowed --name MSG_Windows --distpath compiled launcher.py
 
-      - name: Installation et Compilation de l'installateur NSIS
+      - name: Vérification de l'exécutable généré
         run: |
-          choco install nsis -y
-          $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
-          if (Test-Path $nsisExe) {
-              & $nsisExe installer.nsi
-          } else {
-              makensis installer.nsi
-          }
+          Get-ChildItem -Path compiled -Filter "*.exe" | ForEach-Object { Write-Host "Exécutable créé : $($_.FullName)" }
 
-      - name: Recherche des fichiers générés (.exe et setup)
-        id: get_assets
-        run: |
-          Get-ChildItem -Path . -Filter "*.exe" | ForEach-Object { Write-Host "Trouvé : $($_.Name)" }
-
-      - name: Publication automatique sur GitHub Releases
+      - name: Publication sur GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
           name: "Release v1.0.0 - Hub Education"
           files: |
-            dist/MSG_Windows.exe
-            MSG_Windows_Setup_v1.0.0.exe
+            compiled/MSG_Windows.exe
           draft: false
           prerelease: false
         env:
