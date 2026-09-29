@@ -1,0 +1,59 @@
+===============================================================================
+                       CONTRAT DE LICENCE UTILISATEUR FINAL (CLUF)
+                                  TOUS DROITS RÉSERVÉS
+                             SIGNATURE : HUB EDUCATION
+===============================================================================
+
+PROPRIÉTAIRE : Hub Education
+LOGICIEL : MSG Windows (NetProbe ©)
+VERSION : 1.0.0
+COPYRIGHT © 2026 HUB EDUCATION. TOUS DROITS RÉSERVÉS.
+
+-------------------------------------------------------------------------------
+1. PROPRIÉTÉ INTELLECTUELLE ET DROITS D'AUTEUR
+-------------------------------------------------------------------------------
+Le présent logiciel, incluant sans limitation son code source, son code objet, 
+ses interfaces graphiques, ses marques, ses signatures (notamment la signature 
+"Hub Education"), sa documentation et sa structure, est la propriété exclusive 
+et inaliénable de Hub Education. 
+
+Le logiciel est protégé par les lois internationales sur le droit d'auteur 
+et les traités relatifs à la propriété intellectuelle.
+
+-------------------------------------------------------------------------------
+2. RESTRICTIONS STRICTES D'UTILISATION ET DE COPIE
+-------------------------------------------------------------------------------
+Il est STRICTEMENT INTERDIT, sans l'autorisation écrite préalable et expresse 
+de Hub Education :
+
+  a) COPIE ET DISTRIBUTION : De copier, dupliquer, redistribuer, vendre, louer, 
+     prêter, sous-licencier ou diffuser ce logiciel ou l'une de ses parties 
+     par quelque moyen que ce soit.
+
+  b) MODIFICATION ET INGÉNIERIE INVERSE : De modifier, traduire, adapter, 
+     décompiler, désassembler, défaire l'obfuscation, procéder à l'ingénierie 
+     inverse (reverse engineering) ou créer des œuvres dérivées basées sur ce 
+     logiciel ou son code source.
+
+  c) ALTÉRATION DES SIGNATURES ET MARQUES : De supprimer, modifier, masquer ou 
+     altérer les mentions de copyright, marques, filigranes, attributs cachés 
+     ou fichiers de signature (incluant les marqueurs ".hub_education" et entêtes).
+
+-------------------------------------------------------------------------------
+3. ABSENCE DE GARANTIE
+-------------------------------------------------------------------------------
+Le logiciel est fourni "EN L'ÉTAT", sans aucune garantie expresse ou implicite, 
+y compris mais sans s'y limiter, les garanties de qualité marchande ou d'adéquation 
+à un usage particulier.
+
+-------------------------------------------------------------------------------
+4. RÉSILIATION ET RECOURS
+-------------------------------------------------------------------------------
+Tout non-respect des termes de cette licence entraînera la résiliation immédiate 
+et automatique des droits d'utilisation accordés, sans préjudice des poursuites 
+judiciaires civiles et pénales prévues par la loi.
+
+===============================================================================
+En installant ou en utilisant ce logiciel, vous acceptez d'être lié par l'ensemble 
+des termes du présent contrat de licence.
+===============================================================================
