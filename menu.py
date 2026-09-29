@@ -198,11 +198,30 @@ class App(tk.Tk):
     CHECK_ON = "☑"
     CHECK_OFF = "☐"
 
+    # -- Palette de couleurs (thème sombre Windows 11) ----------------------
+    C_BG      = "#1e2030"
+    C_CARD    = "#252740"
+    C_HEADER  = "#151728"
+    C_ACCENT  = "#4f6af5"
+    C_ACCENT2 = "#3a55d4"
+    C_GREEN   = "#22c55e"
+    C_RED     = "#ef4444"
+    C_TEXT    = "#e2e8f0"
+    C_MUTED   = "#64748b"
+    C_BORDER  = "#2d3154"
+    C_ROW_ALT = "#1a1d2e"
+    C_SEL     = "#2d3a80"
+
+    FONT_UI    = ("Segoe UI", 10)
+    FONT_TITLE = ("Segoe UI", 13, "bold")
+    FONT_MONO  = ("Consolas", 9)
+
     def __init__(self):
         super().__init__()
-        self.title("Couteau suisse réseau")
-        self.geometry("900x750")
-        self.minsize(750, 600)
+        self.title("NetProbe © – Couteau suisse réseau")
+        self.geometry("1050x800")
+        self.minsize(850, 650)
+        self.configure(bg=self.C_BG)
 
         self.scanner = Scanner()
         self.messenger = Messenger()
@@ -210,12 +229,12 @@ class App(tk.Tk):
         self._scan_thread: threading.Thread | None = None
         self._send_thread: threading.Thread | None = None
         self._all_results: list[tuple[str, str, str, str, str]] = []  # (check, machine, ip, hostname, status)
-        self._filter_online = False  # True = afficher uniquement « En ligne »
+        self._filter_online = False
 
         # -- Tracker réseau -------------------------------------------------
         self._tracker_running = False
         self._tracker_stop = threading.Event()
-        self._tracker_known: set[tuple[str, str, str, str, str]] = set()  # (proto, local, port_l, remote, port_r)
+        self._tracker_known: set[tuple[str, str, str, str, str]] = set()
 
         # -- Logger fichier (dossier logs/) ---------------------------------
         logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
@@ -230,157 +249,309 @@ class App(tk.Tk):
         self._file_logger.addHandler(handler)
         self._file_logger.info("Session démarrée")
 
+        self._apply_theme()
         self._build_ui()
         self._poll_queue()
+
+    # ======================================================================
+    #  Thème sombre Windows 11
+    # ======================================================================
+
+    def _apply_theme(self):
+        """Configure le style ttk (thème sombre NetProbe)."""
+        s = ttk.Style(self)
+        s.theme_use("clam")
+
+        # Fond global
+        s.configure(".", background=self.C_BG, foreground=self.C_TEXT,
+                    font=self.FONT_UI, borderwidth=0, focuscolor=self.C_ACCENT)
+
+        # Frames
+        s.configure("TFrame", background=self.C_BG)
+        s.configure("Card.TFrame", background=self.C_CARD)
+
+        # Labels
+        s.configure("TLabel", background=self.C_BG, foreground=self.C_TEXT, font=self.FONT_UI)
+        s.configure("Card.TLabel", background=self.C_CARD, foreground=self.C_TEXT, font=self.FONT_UI)
+        s.configure("Title.TLabel", background=self.C_HEADER, foreground=self.C_TEXT, font=self.FONT_TITLE)
+        s.configure("Muted.TLabel", background=self.C_CARD, foreground=self.C_MUTED, font=("Segoe UI", 9))
+        s.configure("Header.TLabel", background=self.C_HEADER, foreground=self.C_TEXT, font=self.FONT_UI)
+
+        # LabelFrame
+        s.configure("TLabelframe", background=self.C_CARD, foreground=self.C_MUTED,
+                    bordercolor=self.C_BORDER, relief="flat")
+        s.configure("TLabelframe.Label", background=self.C_CARD, foreground=self.C_MUTED,
+                    font=("Segoe UI", 9))
+
+        # Bouton standard
+        s.configure("TButton", background=self.C_CARD, foreground=self.C_TEXT,
+                    borderwidth=1, relief="flat", padding=(10, 6))
+        s.map("TButton",
+              background=[("active", self.C_BORDER), ("pressed", self.C_BORDER)],
+              foreground=[("active", self.C_TEXT)])
+
+        # Bouton accent (bleu)
+        s.configure("Accent.TButton", background=self.C_ACCENT, foreground="#ffffff",
+                    font=("Segoe UI", 10, "bold"), borderwidth=0, relief="flat", padding=(14, 7))
+        s.map("Accent.TButton",
+              background=[("active", self.C_ACCENT2), ("pressed", self.C_ACCENT2)],
+              foreground=[("active", "#ffffff")])
+
+        # Bouton danger (rouge)
+        s.configure("Danger.TButton", background="#7f1d1d", foreground="#fca5a5",
+                    borderwidth=0, relief="flat", padding=(10, 6))
+        s.map("Danger.TButton",
+              background=[("active", "#991b1b"), ("pressed", "#991b1b")],
+              foreground=[("active", "#fca5a5")])
+
+        # Menubutton
+        s.configure("TMenubutton", background=self.C_ACCENT, foreground="#ffffff",
+                    font=("Segoe UI", 10, "bold"), borderwidth=0, relief="flat",
+                    padding=(12, 7), arrowcolor="#ffffff")
+        s.map("TMenubutton", background=[("active", self.C_ACCENT2)])
+
+        # Entry
+        s.configure("TEntry", fieldbackground="#1a1d2e", foreground=self.C_TEXT,
+                    insertcolor=self.C_TEXT, bordercolor=self.C_BORDER,
+                    lightcolor=self.C_BORDER, darkcolor=self.C_BORDER,
+                    font=self.FONT_UI, padding=(8, 6))
+        s.map("TEntry",
+              fieldbackground=[("focus", "#0f1120")],
+              bordercolor=[("focus", self.C_ACCENT)])
+
+        # Progressbar
+        s.configure("TProgressbar", background=self.C_ACCENT, troughcolor=self.C_BORDER,
+                    borderwidth=0, thickness=4)
+
+        # Scrollbar
+        s.configure("TScrollbar", background=self.C_CARD, troughcolor=self.C_BG,
+                    borderwidth=0, arrowcolor=self.C_MUTED, relief="flat")
+        s.map("TScrollbar", background=[("active", self.C_BORDER)])
+
+        # Treeview
+        s.configure("Treeview", background=self.C_CARD, fieldbackground=self.C_CARD,
+                    foreground=self.C_TEXT, rowheight=28, borderwidth=0)
+        s.configure("Treeview.Heading", background=self.C_HEADER, foreground=self.C_MUTED,
+                    font=("Segoe UI", 9, "bold"), borderwidth=0, relief="flat")
+        s.map("Treeview",
+              background=[("selected", self.C_SEL)],
+              foreground=[("selected", "#ffffff")])
+        s.map("Treeview.Heading", background=[("active", self.C_BORDER)])
+
+        # Checkbutton
+        s.configure("TCheckbutton", background=self.C_CARD, foreground=self.C_TEXT)
+
+        # Separator
+        s.configure("TSeparator", background=self.C_BORDER)
+
+
 
     # ======================================================================
     #  Construction de l'interface
     # ======================================================================
 
     def _build_ui(self):
-        # -- En-tête (Menu principal) ---------------------------------------
-        header_frame = ttk.Frame(self, relief="raised", borderwidth=1)
-        header_frame.pack(fill="x", padx=0, pady=0)
+        # ── HEADER ────────────────────────────────────────────────────────
+        header = tk.Frame(self, bg=self.C_HEADER, height=52)
+        header.pack(fill="x")
+        header.pack_propagate(False)
 
-        # Création du bouton menu
-        self.btn_menu = ttk.Menubutton(header_frame, text="☰ Menu Outils")
-        self.btn_menu.pack(side="left", padx=4, pady=4)
+        # Logo
+        tk.Label(
+            header, text="  NetProbe ©",
+            bg=self.C_HEADER, fg=self.C_TEXT,
+            font=("Segoe UI", 14, "bold"),
+        ).pack(side="left", padx=(12, 4))
 
-        # Création du menu déroulant
-        menu = tk.Menu(self.btn_menu, tearoff=0)
-        menu.add_command(label="🔔 Ping", command=self._tool_ping)
-        menu.add_command(label="🔀 Traceroute", command=self._tool_traceroute)
-        menu.add_command(label="🔍 Nslookup", command=self._tool_nslookup)
-        menu.add_separator()
-        menu.add_command(label="🌐 Infos réseau", command=self._tool_network_info)
-        menu.add_command(label="📡 Netstat", command=self._tool_netstat)
-        menu.add_command(label="🛡️ Scan Proxy / Kwartz", command=self._tool_proxy_scan)
-        menu.add_command(label="📊 Tracker réseau (Démarrer/Arrêter)", command=self._toggle_tracker_from_menu)
-        menu.add_command(label="⏻ Arrêt distant", command=self._tool_remote_shutdown)
-        menu.add_separator()
-        menu.add_command(label="📄 Exporter CSV", command=self._export_csv)
-        menu.add_command(label="🧹 Vider journal", command=self._clear_log)
-        menu.add_separator()
-        menu.add_command(label="ℹ️ À propos", command=self._show_about)
+        tk.Label(
+            header, text="Couteau suisse réseau",
+            bg=self.C_HEADER, fg=self.C_MUTED,
+            font=("Segoe UI", 9),
+        ).pack(side="left", padx=(0, 20), pady=(4, 0))
 
-        # Assigner le menu au bouton
+        # Bouton menu ☰
+        self.btn_menu = ttk.Menubutton(header, text="☰  Menu Outils")
+        self.btn_menu.pack(side="left", padx=4)
+
+        menu = tk.Menu(self.btn_menu, tearoff=0,
+                       bg=self.C_CARD, fg=self.C_TEXT,
+                       activebackground=self.C_ACCENT, activeforeground="#ffffff",
+                       font=self.FONT_UI, bd=0, relief="flat")
+        menu.add_command(label="  🔔  Ping",                    command=self._tool_ping)
+        menu.add_command(label="  🔀  Traceroute",              command=self._tool_traceroute)
+        menu.add_command(label="  🔍  Nslookup",                command=self._tool_nslookup)
+        menu.add_separator()
+        menu.add_command(label="  🌐  Infos réseau",            command=self._tool_network_info)
+        menu.add_command(label="  📡  Netstat",                 command=self._tool_netstat)
+        menu.add_command(label="  🛡️  Scan Proxy / Kwartz",    command=self._tool_proxy_scan)
+        menu.add_command(label="  📊  Tracker réseau (Démarrer/Arrêter)", command=self._toggle_tracker_from_menu)
+        menu.add_command(label="  ⏻   Arrêt distant",           command=self._tool_remote_shutdown)
+        menu.add_separator()
+        menu.add_command(label="  📄  Exporter CSV",            command=self._export_csv)
+        menu.add_command(label="  🧹  Vider journal",           command=self._clear_log)
+        menu.add_separator()
+        menu.add_command(label="  ℹ️  À propos",               command=self._show_about)
         self.btn_menu["menu"] = menu
+        self._tracker_menu_index = 7
 
-        # Pour changer dynamiquement le texte du tracker si besoin (optionnel)
-        self._tracker_menu_index = 7  # Index de la commande dans le menu
+        # Branding droite
+        tk.Label(
+            header, text="Hub Education  ",
+            bg=self.C_HEADER, fg=self.C_MUTED,
+            font=("Segoe UI", 9),
+        ).pack(side="right")
 
-        # -- Cadre scan -----------------------------------------------------
-        frame_scan = ttk.LabelFrame(self, text="Scan de plage IP", padding=8)
-        frame_scan.pack(fill="x", padx=10, pady=(10, 5))
+        # ── BARRE DE SCAN ────────────────────────────────────────────────
+        scan_bar = tk.Frame(self, bg=self.C_CARD, pady=0)
+        scan_bar.pack(fill="x", padx=0, pady=(2, 0))
 
-        ttk.Label(frame_scan, text="IP de début :").grid(
-            row=0, column=0, sticky="w", padx=(0, 4)
-        )
-        self.entry_ip_start = ttk.Entry(frame_scan, width=18)
-        self.entry_ip_start.grid(row=0, column=1, padx=(0, 10))
+        inner_scan = tk.Frame(scan_bar, bg=self.C_CARD)
+        inner_scan.pack(fill="x", padx=14, pady=10)
+
+        # Label IP début
+        tk.Label(inner_scan, text="IP début", bg=self.C_CARD, fg=self.C_MUTED,
+                 font=("Segoe UI", 9)).grid(row=0, column=0, sticky="w", padx=(0, 4))
+        self.entry_ip_start = ttk.Entry(inner_scan, width=18)
+        self.entry_ip_start.grid(row=0, column=1, padx=(0, 16), ipady=3)
         self.entry_ip_start.insert(0, "192.168.1.1")
 
-        ttk.Label(frame_scan, text="IP de fin :").grid(
-            row=0, column=2, sticky="w", padx=(0, 4)
-        )
-        self.entry_ip_end = ttk.Entry(frame_scan, width=18)
-        self.entry_ip_end.grid(row=0, column=3, padx=(0, 10))
+        # Label IP fin
+        tk.Label(inner_scan, text="IP fin", bg=self.C_CARD, fg=self.C_MUTED,
+                 font=("Segoe UI", 9)).grid(row=0, column=2, sticky="w", padx=(0, 4))
+        self.entry_ip_end = ttk.Entry(inner_scan, width=18)
+        self.entry_ip_end.grid(row=0, column=3, padx=(0, 16), ipady=3)
         self.entry_ip_end.insert(0, "192.168.1.254")
 
+        # Boutons
         self.btn_scan = ttk.Button(
-            frame_scan, text="🔍 Scanner", command=self._on_scan
+            inner_scan, text="🔍  Scanner", command=self._on_scan, style="Accent.TButton"
         )
-        self.btn_scan.grid(row=0, column=4, padx=4)
+        self.btn_scan.grid(row=0, column=4, padx=(0, 6))
 
         self.btn_stop = ttk.Button(
-            frame_scan, text="⛔ Arrêter", command=self._on_stop, state="disabled"
+            inner_scan, text="⛔  Arrêter", command=self._on_stop,
+            state="disabled", style="Danger.TButton"
         )
-        self.btn_stop.grid(row=0, column=5, padx=4)
+        self.btn_stop.grid(row=0, column=5, padx=(0, 6))
 
-        self.progress = ttk.Progressbar(frame_scan, mode="determinate")
-        self.progress.grid(row=1, column=0, columnspan=6, sticky="ew", pady=(8, 0))
+        self.btn_filter = ttk.Button(
+            inner_scan, text="🟢  Filtrer : En ligne", command=self._toggle_filter
+        )
+        self.btn_filter.grid(row=0, column=6, padx=(0, 6))
 
-        self.label_progress = ttk.Label(frame_scan, text="")
-        self.label_progress.grid(row=2, column=0, columnspan=6, sticky="w")
+        ttk.Button(
+            inner_scan, text="☑  Tout sélect.", command=self._select_all
+        ).grid(row=0, column=7, padx=(0, 4))
+        ttk.Button(
+            inner_scan, text="☐  Tout désélect.", command=self._deselect_all
+        ).grid(row=0, column=8, padx=(0, 4))
 
-        frame_scan.columnconfigure(4, weight=1)
+        # Progressbar + label
+        prog_frame = tk.Frame(scan_bar, bg=self.C_CARD)
+        prog_frame.pack(fill="x", padx=14, pady=(0, 8))
+        self.progress = ttk.Progressbar(prog_frame, mode="determinate")
+        self.progress.pack(fill="x", side="left", expand=True)
+        self.label_progress = tk.Label(
+            prog_frame, text="", bg=self.C_CARD, fg=self.C_MUTED,
+            font=("Segoe UI", 8), width=28, anchor="e"
+        )
+        self.label_progress.pack(side="right", padx=(8, 0))
 
-        # -- Treeview résultats ---------------------------------------------
-        frame_tree = ttk.LabelFrame(self, text="Résultats", padding=8)
-        frame_tree.pack(fill="both", expand=True, padx=10, pady=5)
+        # ── TREEVIEW RÉSULTATS ───────────────────────────────────────────
+        tree_frame = tk.Frame(self, bg=self.C_CARD)
+        tree_frame.pack(fill="both", expand=True, padx=0, pady=(2, 0))
+
+        # En-tête du cadre
+        tree_header = tk.Frame(tree_frame, bg=self.C_CARD)
+        tree_header.pack(fill="x", padx=14, pady=(8, 4))
+        tk.Label(tree_header, text="Résultats du scan",
+                 bg=self.C_CARD, fg=self.C_TEXT,
+                 font=("Segoe UI", 10, "bold")).pack(side="left")
+        ttk.Button(
+            tree_header, text="📄  Exporter CSV", command=self._export_csv
+        ).pack(side="right")
 
         columns = ("check", "machine", "ip", "hostname", "status")
         self.tree = ttk.Treeview(
-            frame_tree, columns=columns, show="headings", selectmode="none",
-            displaycolumns=("check", "machine", "status"),  # Cacher ip et hostname bruts
+            tree_frame, columns=columns, show="headings", selectmode="none",
+            displaycolumns=("check", "machine", "status"),
         )
-        self.tree.heading("check", text="✓")
-        self.tree.heading("machine", text="Machine")
-        self.tree.heading("ip", text="IP")
+        self.tree.heading("check",    text="✓",         anchor="center")
+        self.tree.heading("machine",  text="Machine",   anchor="w")
+        self.tree.heading("ip",       text="IP")
         self.tree.heading("hostname", text="Nom d'hôte")
-        self.tree.heading("status", text="Statut")
+        self.tree.heading("status",   text="Statut",    anchor="center")
 
-        self.tree.column("check", width=40, anchor="center", stretch=False)
-        self.tree.column("machine", width=350, anchor="w")
-        self.tree.column("ip", width=0, stretch=False)
-        self.tree.column("hostname", width=0, stretch=False)
-        self.tree.column("status", width=100, anchor="center")
+        self.tree.column("check",    width=44,  anchor="center", stretch=False)
+        self.tree.column("machine",  width=420, anchor="w")
+        self.tree.column("ip",       width=0,   stretch=False)
+        self.tree.column("hostname", width=0,   stretch=False)
+        self.tree.column("status",   width=110, anchor="center")
 
-        scrollbar = ttk.Scrollbar(frame_tree, orient="vertical", command=self.tree.yview)
+        # Alternance de couleurs
+        self.tree.tag_configure("online",  foreground=self.C_GREEN)
+        self.tree.tag_configure("offline", foreground=self.C_MUTED)
+        self.tree.tag_configure("row_odd", background=self.C_CARD)
+        self.tree.tag_configure("row_even", background=self.C_ROW_ALT)
+
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.tree.pack(side="left", fill="both", expand=True, padx=(14, 0), pady=(0, 10))
+        scrollbar.pack(side="right", fill="y", pady=(0, 10), padx=(0, 4))
 
-        # Clic sur une ligne = basculer la case à cocher
         self.tree.bind("<ButtonRelease-1>", self._on_tree_click)
 
-        # -- Boutons de sélection & export ----------------------------------
-        frame_btns = ttk.Frame(self)
-        frame_btns.pack(fill="x", padx=10, pady=2)
+        # ── PANNEAU BAS : MESSAGE + JOURNAL ─────────────────────────────
+        bottom = tk.Frame(self, bg=self.C_BG)
+        bottom.pack(fill="x", padx=0, pady=(2, 0))
 
-        ttk.Button(
-            frame_btns, text="Tout sélectionner", command=self._select_all
-        ).pack(side="left", padx=(0, 4))
+        # -- Envoi de message -----------------------------------------------
+        frame_msg = tk.Frame(bottom, bg=self.C_CARD)
+        frame_msg.pack(side="left", fill="both", expand=True, padx=(0, 2), pady=0)
 
-        ttk.Button(
-            frame_btns, text="Tout désélectionner", command=self._deselect_all
-        ).pack(side="left", padx=(0, 4))
+        tk.Label(frame_msg, text="  Envoi de message Windows",
+                 bg=self.C_CARD, fg=self.C_MUTED,
+                 font=("Segoe UI", 9)).pack(anchor="w", pady=(8, 2))
 
-        self.btn_filter = ttk.Button(
-            frame_btns, text="🟢 Filtrer : En ligne", command=self._toggle_filter
+        self.text_message = tk.Text(
+            frame_msg, height=4, wrap="word",
+            bg=self.C_BG, fg=self.C_TEXT,
+            insertbackground=self.C_TEXT,
+            relief="flat", bd=0,
+            font=self.FONT_UI,
+            padx=8, pady=6,
         )
-        self.btn_filter.pack(side="left", padx=(0, 4))
-
-        ttk.Button(
-            frame_btns, text="📄 Exporter CSV", command=self._export_csv
-        ).pack(side="right")
-
-        # -- Cadre message --------------------------------------------------
-        frame_msg = ttk.LabelFrame(self, text="Envoi de message", padding=8)
-        frame_msg.pack(fill="x", padx=10, pady=5)
-
-        ttk.Label(frame_msg, text="Message :").pack(anchor="w")
-        self.text_message = tk.Text(frame_msg, height=3, wrap="word")
-        self.text_message.pack(fill="x", pady=(2, 6))
+        self.text_message.pack(fill="x", padx=10, pady=(0, 6))
 
         self.btn_send = ttk.Button(
-            frame_msg, text="📨 Envoyer", command=self._on_send
+            frame_msg, text="📨  Envoyer", command=self._on_send, style="Accent.TButton"
         )
-        self.btn_send.pack(anchor="e")
+        self.btn_send.pack(anchor="e", padx=10, pady=(0, 10))
 
         # -- Journal --------------------------------------------------------
-        frame_log = ttk.LabelFrame(self, text="Journal", padding=8)
-        frame_log.pack(fill="both", expand=True, padx=10, pady=(5, 10))
+        frame_log = tk.Frame(bottom, bg="#0d0f1a")
+        frame_log.pack(side="left", fill="both", expand=True, padx=(2, 0), pady=0)
+
+        tk.Label(frame_log, text="  Journal de session",
+                 bg="#0d0f1a", fg=self.C_MUTED,
+                 font=("Segoe UI", 9)).pack(anchor="w", pady=(8, 2))
 
         self.log = scrolledtext.ScrolledText(
-            frame_log, height=6, state="disabled", wrap="word"
+            frame_log, height=7, state="disabled", wrap="word",
+            bg="#0d0f1a", fg=self.C_TEXT,
+            insertbackground=self.C_TEXT,
+            relief="flat", bd=0,
+            font=self.FONT_MONO,
+            padx=10, pady=6,
         )
-        self.log.pack(fill="both", expand=True)
+        self.log.pack(fill="both", expand=True, padx=0, pady=(0, 0))
 
-        # Tags pour colorer le journal
-        self.log.tag_configure("ok", foreground="green")
-        self.log.tag_configure("err", foreground="red")
-        self.log.tag_configure("info", foreground="blue")
+        # Tags couleurs journal
+        self.log.tag_configure("ok",   foreground=self.C_GREEN)
+        self.log.tag_configure("err",  foreground=self.C_RED)
+        self.log.tag_configure("info", foreground="#60a5fa")
+
+
 
     # ======================================================================
     #  Boucle de traitement de la file (communication threads → UI)
@@ -396,17 +567,20 @@ class App(tk.Tk):
                 if kind == "result":
                     _, ip, hostname, status = msg
                     check = self.CHECK_ON if status == "En ligne" else self.CHECK_OFF
-                    
+
                     machine = f"{hostname} ({ip})" if hostname else ip
-                    
-                    # Stocker tous les résultats avec la nouvelle colonne 'machine'
+
                     self._all_results.append((check, machine, ip, hostname, status))
-                    # N'afficher que si le filtre le permet
                     if not self._filter_online or status == "En ligne":
+                        idx = len(self.tree.get_children())
+                        row_tag = "row_even" if idx % 2 == 0 else "row_odd"
+                        status_tag = "online" if status == "En ligne" else "offline"
                         self.tree.insert(
                             "", "end",
                             values=(check, machine, ip, hostname, status),
+                            tags=(row_tag, status_tag),
                         )
+
 
                 elif kind == "progress":
                     _, current, total = msg
@@ -586,13 +760,19 @@ class App(tk.Tk):
         """Reconstruit le Treeview à partir de _all_results selon le filtre actif."""
         for item in self.tree.get_children():
             self.tree.delete(item)
+        idx = 0
         for check, machine, ip, hostname, status in self._all_results:
             if self._filter_online and status != "En ligne":
                 continue
+            row_tag = "row_even" if idx % 2 == 0 else "row_odd"
+            status_tag = "online" if status == "En ligne" else "offline"
             self.tree.insert(
                 "", "end",
                 values=(check, machine, ip, hostname, status),
+                tags=(row_tag, status_tag),
             )
+            idx += 1
+
 
     def _sync_checks_to_results(self):
         """Synchronise l'état des cases du Treeview vers _all_results."""
