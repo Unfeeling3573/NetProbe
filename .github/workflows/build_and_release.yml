@@ -31,7 +31,7 @@ jobs:
 
       - name: Compilation de l'application dans le dossier compiled/
         run: |
-          pyinstaller --onefile --windowed --name NetProbe --distpath compiled launcher.py
+          pyinstaller --onefile --windowed --name NetProbe --add-data "assets;assets" --distpath compiled launcher.py
 
       - name: Vérification de l'exécutable généré
         run: |

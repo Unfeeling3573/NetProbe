@@ -60,6 +60,8 @@ Section "Installation Principale" SecMain
     File /nonfatal "menu.py"
     File /nonfatal "README.md"
     File /nonfatal "LICENSE.txt"
+    CreateDirectory "$INSTDIR\assets"
+    File /nonfatal /r "assets\*.*"
 
     ; 2. Création et configuration du dossier de logs
     DetailPrint "Création du dossier de logs..."
@@ -107,6 +109,8 @@ Section "Uninstall"
     Delete "$INSTDIR\README.md"
     Delete "$INSTDIR\LICENSE.txt"
     Delete "$INSTDIR\.hub_education"
+    Delete "$INSTDIR\assets\*.*"
+    RMDir "$INSTDIR\assets"
     Delete "$INSTDIR\logs\*.*"
     RMDir "$INSTDIR\logs"
     Delete "$INSTDIR\Uninstall.exe"

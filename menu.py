@@ -168,11 +168,12 @@ class Messenger:
         Retourne (succès: bool, détail: str).
         """
         try:
+            extra = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if os.name == "nt" else {}
             result = subprocess.run(
                 ["msg", "*", f"/SERVER:{ip}", "/TIME:60", message],
                 capture_output=True,
                 timeout=10,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+                **extra,
             )
             if result.returncode == 0:
                 return True, "Message envoyé"
@@ -644,7 +645,8 @@ class App(tk.Tk):
         except queue.Empty:
             pass
         finally:
-            self.after(50, self._poll_queue)
+            if self.winfo_exists():
+                self.after(50, self._poll_queue)
 
     # ======================================================================
     #  Validation
@@ -742,6 +744,8 @@ class App(tk.Tk):
         if not item:
             return
         values = list(self.tree.item(item, "values"))
+        if not values or len(values) < 5:
+            return
         values[0] = self.CHECK_OFF if values[0] == self.CHECK_ON else self.CHECK_ON
         self.tree.item(item, values=values)
         # Synchroniser dans _all_results
@@ -917,6 +921,7 @@ class App(tk.Tk):
         dialog.title(title)
         dialog.geometry("380x120")
         dialog.resizable(False, False)
+        dialog.configure(bg=self.C_BG)
         dialog.transient(self)
         dialog.grab_set()
 
@@ -976,7 +981,8 @@ class App(tk.Tk):
                     self._log(line)
             except queue.Empty:
                 pass
-            self.after(50, poll)
+            if self.winfo_exists():
+                self.after(50, poll)
 
         threading.Thread(target=run, daemon=True).start()
         poll()
@@ -1060,6 +1066,7 @@ class App(tk.Tk):
         dialog.title("Scan Proxy / Kwartz")
         dialog.geometry("420x200")
         dialog.resizable(False, False)
+        dialog.configure(bg=self.C_BG)
         dialog.transient(self)
         dialog.grab_set()
 
@@ -1188,15 +1195,14 @@ class App(tk.Tk):
     @staticmethod
     def _check_port(ip: str, port: int, timeout: float = 1.5) -> tuple[bool, str]:
         """Teste si un port est ouvert et récupère la bannière."""
+        sock = None
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(timeout)
             sock.connect((ip, port))
-            # Tenter de lire une bannière
             banner = ""
             try:
                 sock.settimeout(1)
-                # Envoyer une requête HTTP minimale pour les ports web/proxy
                 if port in (80, 443, 3128, 8080, 8443, 8888, 9090, 10000):
                     sock.sendall(b"HEAD / HTTP/1.0\r\nHost: test\r\n\r\n")
                 data = sock.recv(512)
@@ -1205,10 +1211,15 @@ class App(tk.Tk):
                     banner = banner[:80] + "…"
             except (socket.timeout, OSError):
                 pass
-            sock.close()
             return True, banner
         except (socket.timeout, ConnectionRefusedError, OSError):
             return False, ""
+        finally:
+            if sock:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
 
     @staticmethod
     def _identify_proxy_http(ip: str, open_ports: list[tuple[int, str, str]]) -> str:
@@ -1251,6 +1262,8 @@ class App(tk.Tk):
         if not host:
             return "", ""
 
+        old_timeout = socket.getdefaulttimeout()
+
         # Vérifier si c'est déjà une IP valide
         try:
             ipaddress.IPv4Address(host)
@@ -1262,7 +1275,7 @@ class App(tk.Tk):
             except (socket.herror, socket.timeout, OSError):
                 return host, host
             finally:
-                socket.setdefaulttimeout(None)
+                socket.setdefaulttimeout(old_timeout)
         except (ipaddress.AddressValueError, ValueError):
             pass
 
@@ -1274,7 +1287,7 @@ class App(tk.Tk):
         except (socket.gaierror, socket.timeout, OSError):
             return "", f"{host} (résolution DNS échouée)"
         finally:
-            socket.setdefaulttimeout(None)
+            socket.setdefaulttimeout(old_timeout)
 
     def _tool_remote_shutdown(self):
         """Ouvre la fenêtre d'arrêt / redémarrage distant."""
@@ -1282,6 +1295,7 @@ class App(tk.Tk):
         win.title("Arrêt / Redémarrage distant")
         win.geometry("550x520")
         win.resizable(True, True)
+        win.configure(bg=self.C_BG)
         win.transient(self)
 
         # -- Liste des machines cibles --------------------------------------
@@ -1292,7 +1306,14 @@ class App(tk.Tk):
         frame_list = ttk.Frame(frame_targets)
         frame_list.pack(fill="both", expand=True)
 
-        listbox = tk.Listbox(frame_list, height=8, selectmode="extended")
+        listbox = tk.Listbox(
+            frame_list, height=8, selectmode="extended",
+            bg=self.C_CARD, fg=self.C_TEXT,
+            selectbackground=self.C_SEL, selectforeground="#ffffff",
+            relief="flat", highlightthickness=1,
+            highlightcolor=self.C_ACCENT, highlightbackground=self.C_BORDER,
+            font=self.FONT_UI,
+        )
         scrollbar = ttk.Scrollbar(frame_list, orient="vertical", command=listbox.yview)
         listbox.configure(yscrollcommand=scrollbar.set)
         listbox.pack(side="left", fill="both", expand=True)
@@ -1733,65 +1754,61 @@ class App(tk.Tk):
         return services.get(port, "")
 
 
-def _split_address(raw: str) -> tuple[str, str]:
-    """Sépare une adresse brute (IP:port, IP.port, [IPv6]:port) en (adresse, port)."""
-    if not raw or raw == "*.*":
+    @staticmethod
+    def _split_address(raw: str) -> tuple[str, str]:
+        """Sépare une adresse brute (IP:port, IP.port, [IPv6]:port) en (adresse, port)."""
+        if not raw or raw == "*.*":
+            return "", ""
+
+        # Format IPv6 [::1]:port
+        if raw.startswith("["):
+            bracket = raw.rfind("]")
+            if bracket != -1 and bracket + 1 < len(raw):
+                addr = raw[1:bracket]
+                port = raw[bracket + 2:]
+                return addr, port
+
+        # Format IP:port (Windows) ou IP.port (macOS/Linux)
+        last_colon = raw.rfind(":")
+        last_dot = raw.rfind(".")
+
+        if last_colon > 0:
+            addr = raw[:last_colon]
+            port = raw[last_colon + 1:]
+            if port == "*" or port.isdigit():
+                return addr, port
+
+        if last_dot > 0:
+            addr = raw[:last_dot]
+            port = raw[last_dot + 1:]
+            if port == "*" or port.isdigit():
+                return addr, port
+
         return "", ""
 
-    # Format IPv6 [::1]:port
-    if raw.startswith("["):
-        bracket = raw.rfind("]")
-        if bracket != -1 and bracket + 1 < len(raw):
-            addr = raw[1:bracket]
-            port = raw[bracket + 2:]  # saute ]:
-            return addr, port
-
-    # Format IP:port (Windows) ou IP.port (macOS/Linux)
-    # Trouver le dernier séparateur (. ou :)
-    last_colon = raw.rfind(":")
-    last_dot = raw.rfind(".")
-
-    # Préférer : comme séparateur (Windows)
-    if last_colon > 0:
-        addr = raw[:last_colon]
-        port = raw[last_colon + 1:]
-        # Vérifier que le port est un nombre ou *
-        if port == "*" or port.isdigit():
-            return addr, port
-
-    # Sinon essayer . (macOS)
-    if last_dot > 0:
-        addr = raw[:last_dot]
-        port = raw[last_dot + 1:]
-        if port == "*" or port.isdigit():
-            return addr, port
-
-    return "", ""
+    def _show_about(self):
+        """Affiche la boîte À propos avec le lien vers le dépôt GitHub."""
+        messagebox.showinfo(
+            "À propos",
+            "NetProbe © – Couteau suisse réseau\n"
+            "Éditeur : Hub Education\n"
+            "Version 1.1.5\n\n"
+            "• Scan de plage IP (ping parallèle)\n"
+            "• Envoi de messages Windows (msg)\n"
+            "• Ping, Traceroute, Nslookup\n"
+            "• Infos réseau, Netstat\n"
+            "• Scan Proxy / Kwartz\n"
+            "• Tracker réseau temps réel\n"
+            "• Arrêt & Redémarrage distant + DNS\n"
+            "• Export CSV & Logs horodatés\n\n"
+            "Dépôt GitHub / Nouvelles versions :\n"
+            "https://github.com/Unfeeling3573/NetProbe\n\n"
+            "Python 3 – tkinter – Aucune dépendance externe",
+        )
 
 
-# Remonter _show_about dans la classe App : on le fait via un patch
-def _show_about(self):
-    """Affiche la boîte À propos avec le lien vers le dépôt GitHub."""
-    messagebox.showinfo(
-        "À propos",
-        "NetProbe © – Couteau suisse réseau\n"
-        "Éditeur : Hub Education\n"
-        "Version 1.1.5\n\n"
-        "• Scan de plage IP (ping parallèle)\n"
-        "• Envoi de messages Windows (msg)\n"
-        "• Ping, Traceroute, Nslookup\n"
-        "• Infos réseau, Netstat\n"
-        "• Scan Proxy / Kwartz\n"
-        "• Tracker réseau temps réel\n"
-        "• Arrêt & Redémarrage distant + DNS\n"
-        "• Export CSV & Logs horodatés\n\n"
-        "Dépôt GitHub / Nouvelles versions :\n"
-        "https://github.com/Unfeeling3573/NetProbe\n\n"
-        "Python 3 – tkinter – Aucune dépendance externe",
-    )
-
-
-App._show_about = _show_about
+# Alias module pour compatibilité
+_split_address = App._split_address
 
 
 # ---------------------------------------------------------------------------

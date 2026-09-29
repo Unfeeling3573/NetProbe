@@ -192,22 +192,35 @@ def run_checks():
 #  Lancement de l'application
 # ---------------------------------------------------------------------------
 
+def _show_error(msg: str):
+    """Affiche une erreur via messagebox graphique ou console selon l'environnement."""
+    print(f"\n[ERREUR] {msg}")
+    try:
+        import tkinter.messagebox as mb
+        mb.showerror("NetProbe – Erreur", msg)
+    except Exception:
+        pass
+    if sys.stdin and hasattr(sys.stdin, "isatty") and sys.stdin.isatty():
+        try:
+            input("\nAppuyez sur Entrée pour quitter...")
+        except (EOFError, OSError):
+            pass
+
+
 def main():
     """Point d'entrée principal."""
     if not run_checks():
-        input("Appuyez sur Entrée pour quitter...")
+        _show_error("Certaines dépendances sont manquantes. Vérifiez la console.")
         sys.exit(1)
 
     # Importer et lancer l'application
     try:
         from menu import App
-        print("  Lancement de l'interface…")
-        print()
+        print("  Lancement de l'interface…\n")
         app = App()
         app.mainloop()
     except Exception as e:
-        print(f"\n[ERREUR] Impossible de lancer l'application :\n  {e}")
-        input("\nAppuyez sur Entrée pour quitter...")
+        _show_error(f"Impossible de lancer l'application :\n{e}")
         sys.exit(1)
 
 
