@@ -10,3 +10,6 @@ build/
 dist/
 compiled/
 *.exe
+
+# Fichiers de log de session (seul .gitkeep est conservé)
+logs/*.log

@@ -369,9 +369,33 @@ class App(tk.Tk):
             font=("Segoe UI", 9),
         ).pack(side="left", padx=(0, 20), pady=(4, 0))
 
-        # Bouton menu ☰
-        self.btn_menu = ttk.Menubutton(header, text="☰  Menu Outils")
-        self.btn_menu.pack(side="left", padx=4)
+        # Bouton menu avec icône hamburger intégrée (18x18, même taille que le texte)
+        _MENU_ICON_B64 = (
+            "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAERlWElm"
+            "TU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAEqAD"
+            "AAQAAAABAAAAEgAAAACaqbJVAAABJ0lEQVQ4Ec1TO4qEQBDt1va78QhjMhfRC3iWjVTYbJfJ"
+            "DPQKHsMLeJIBYQIFI8W/+2yYxGDQhoVtaKSoquer96oJ+W+HboSyLLswxhQRctM0jZ7nlTRN"
+            "00/DMH7meVYppesZsHVdqSzLQ9M0d1bX9UdVVSaA2BmQVy2AmKIoJh8tCIIbAqXv+1f+0FfT"
+            "NDLiJEnyONRwpIgzMk3zuiyLeqRhXyNJ0tC27ZM6juOXZfkNICHXADRalnVnURSttm0TiE3g"
+            "wv6Hb2O4TCA2KYqC8NEAcO26TsV927hP6rpOcAcAPvc54ZgziuP4hlmFNIK2YxiGD+r7/hfob"
+            "WILLSQITNg/vtkN3ksLoM3+c2oTQjf78U5bPprruhewEhoNBo15npfC4v5Z4y/esHlTiZ+je"
+            "wAAAABJRU5ErkJggg=="
+        )
+        try:
+            self._menu_icon = tk.PhotoImage(data=_MENU_ICON_B64)
+        except Exception:
+            self._menu_icon = None
+
+        if self._menu_icon:
+            self.btn_menu = ttk.Menubutton(
+                header,
+                text="  Menu Outils",
+                image=self._menu_icon,
+                compound="left",
+            )
+        else:
+            self.btn_menu = ttk.Menubutton(header, text="☰  Menu Outils")
+        self.btn_menu.pack(side="left", padx=4, pady=8)
 
         menu = tk.Menu(self.btn_menu, tearoff=0,
                        bg=self.C_CARD, fg=self.C_TEXT,
