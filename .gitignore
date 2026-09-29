@@ -1,0 +1,11 @@
+# Ne pas inclure les clés et tokens dans le dépôt Git
+github_config.json
+*.token
+*.key
+
+# Fichiers compilés & caches
+__pycache__/
+*.pyc
+build/
+dist/
+*.exe
