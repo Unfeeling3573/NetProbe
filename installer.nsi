@@ -1,23 +1,22 @@
 ; ============================================================================
-; NSIS Installer Script -  NetProbe © / Hub Education
+; NSIS Installer Script – NetProbe © / Hub Education
+; Version 1.1.5
 ; ============================================================================
 
-!define APP_NAME "MSG Windows"
-!define APP_VERSION "1.0.0"
+!define APP_NAME "NetProbe"
+!define APP_VERSION "1.1.5"
 !define APP_PUBLISHER "Hub Education"
-!define APP_EXE "MSG_Windows.exe" ; Nom de l'exécutable compilé
-!define APP_DIR "MSG_Windows"
+!define APP_EXE "NetProbe.exe"         ; Nom de l'exécutable compilé par PyInstaller
+!define APP_DIR "NetProbe"
 
-; Configuration Dépôt GitHub Privé
-!define GITHUB_OWNER "Unfeeling3573"
+; Dépôt GitHub (pas de token ici – voir README pour les mises à jour)
 !define GITHUB_REPO "https://github.com/Unfeeling3573/NetProbe"
-!define GITHUB_TOKEN "TOKEN_REVOQUE" ; <--- Remplacez par votre token ici
 
 ; ----------------------------------------------------------------------------
 ; Configuration Générale
 ; ----------------------------------------------------------------------------
 Name "${APP_NAME}"
-OutFile "MSG_Windows_Setup_v${APP_VERSION}.exe"
+OutFile "NetProbe_Setup_v${APP_VERSION}.exe"
 InstallDir "$PROGRAMFILES\${APP_DIR}"
 InstallDirRegKey HKLM "Software\${APP_PUBLISHER}\${APP_NAME}" "Install_Dir"
 RequestExecutionLevel admin
@@ -53,11 +52,10 @@ Section "Installation Principale" SecMain
 
     SetOutPath "$INSTDIR"
 
-    ; 1. Copie des fichiers du projet
-    ; Si vous avez compilé avec PyInstaller, copiez l'exécutable :
-    File /nonfatal "dist\${APP_EXE}"
-    
-    ; Copie des scripts Python (si exécuté via Python)
+    ; 1. Copie de l'exécutable compilé par PyInstaller (dossier compiled/)
+    File /nonfatal "compiled\${APP_EXE}"
+
+    ; Copie des scripts Python (si utilisation sans compilation)
     File /nonfatal "launcher.py"
     File /nonfatal "menu.py"
     File /nonfatal "README.md"
@@ -81,6 +79,7 @@ Section "Installation Principale" SecMain
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "Publisher" "${APP_PUBLISHER}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayVersion" "${APP_VERSION}"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "HelpLink" "${GITHUB_REPO}"
 
     ; 5. Création du désinstallateur
     WriteUninstaller "$INSTDIR\Uninstall.exe"
