@@ -29,13 +29,15 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --name MSG_Windows launcher.py
 
-      - name: Installation de NSIS via Chocolatey
+      - name: Installation et Compilation de l'installateur NSIS
         run: |
           choco install nsis -y
-
-      - name: Compilation de l'installateur NSIS
-        run: |
-          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
+          $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (Test-Path $nsisExe) {
+              & $nsisExe installer.nsi
+          } else {
+              makensis installer.nsi
+          }
 
       - name: Recherche des fichiers générés (.exe et setup)
         id: get_assets
