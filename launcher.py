@@ -4,8 +4,8 @@
 # SIGNATURE : Hub Education
 # ==========================================
 """
-MSG Windows – Launcher
-=======================
+NetProbe – Launcher
+====================
 Point d'entrée de l'application.
 Vérifie les dépendances et l'environnement avant de lancer l'interface.
 
@@ -14,7 +14,7 @@ Usage :
 
 Empaquetage en .exe (PyInstaller) :
   pip install pyinstaller
-  pyinstaller --onefile --windowed --name MSG_Windows launcher.py
+  pyinstaller --onefile --windowed --name NetProbe launcher.py
 """
 
 import sys
@@ -127,7 +127,7 @@ def create_logs_directory():
 def run_checks():
     """Exécute toutes les vérifications. Renvoie True si tout est OK."""
     print("=" * 55)
-    print("  MSG Windows – Vérification des dépendances")
+    print("  NetProbe – Vérification des dépendances")
     print("=" * 55)
     print()
 

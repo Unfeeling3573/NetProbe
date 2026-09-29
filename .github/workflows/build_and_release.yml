@@ -1,4 +1,4 @@
-name: Build & Release Executable (PyInstaller)
+name: Build & Release – NetProbe (PyInstaller)
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Compilation Windows Exe (Dossier compiled)
+    name: Compilation Windows Exe (dossier compiled/)
     runs-on: windows-latest
     permissions:
       contents: write
@@ -29,9 +29,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
 
-      - name: Compilation de l'application dans le dossier compiled
+      - name: Compilation de l'application dans le dossier compiled/
         run: |
-          pyinstaller --onefile --windowed --name MSG_Windows --distpath compiled launcher.py
+          pyinstaller --onefile --windowed --name NetProbe --distpath compiled launcher.py
 
       - name: Vérification de l'exécutable généré
         run: |
@@ -40,10 +40,25 @@ jobs:
       - name: Publication sur GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
-          name: "Release v1.1.0 - Hub Education"
+          tag_name: v1.1.5
+          name: "Release v1.1.5 – NetProbe © Hub Education"
+          body: |
+            ## NetProbe v1.1.5 – Patch correctif
+
+            ### Corrections
+            - Nettoyage du code mort (`_AboutMixin`)
+            - Nom de l'application uniformisé : **NetProbe** partout
+            - Token GitHub retiré du fichier `installer.nsi`
+            - Chemin de compilation corrigé (`compiled/` au lieu de `dist/`)
+            - Docstrings et titres mis à jour
+
+            ### Téléchargement
+            Téléchargez `NetProbe.exe` ci-dessous, aucune installation Python requise.
+
+            ### Dépôt
+            https://github.com/Unfeeling3573/NetProbe
           files: |
-            compiled/MSG_Windows.exe
+            compiled/NetProbe.exe
           draft: false
           prerelease: false
         env:

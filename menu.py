@@ -25,7 +25,7 @@ Prérequis pour que la commande `msg` fonctionne à distance :
 
 Empaquetage en .exe (PyInstaller) :
   pip install pyinstaller
-  pyinstaller --onefile --windowed --name MSG_Windows msg_windows.py
+  pyinstaller --onefile --windowed --name NetProbe launcher.py
 """
 
 import csv
@@ -223,7 +223,7 @@ class App(tk.Tk):
         log_filename = datetime.now().strftime("session_%Y%m%d_%H%M%S.log")
         log_path = os.path.join(logs_dir, log_filename)
 
-        self._file_logger = logging.getLogger("msg_windows")
+        self._file_logger = logging.getLogger("netprobe")
         self._file_logger.setLevel(logging.DEBUG)
         handler = logging.FileHandler(log_path, encoding="utf-8")
         handler.setFormatter(logging.Formatter("%(asctime)s  %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
@@ -1565,11 +1565,6 @@ def _split_address(raw: str) -> tuple[str, str]:
     return "", ""
 
 
-class _AboutMixin:
-    """Placeholder pour ne pas casser l'import — la vraie méthode est dans App."""
-    pass
-
-
 # Remonter _show_about dans la classe App : on le fait via un patch
 def _show_about(self):
     """Affiche la boîte À propos avec le lien vers le dépôt GitHub."""
@@ -1577,7 +1572,7 @@ def _show_about(self):
         "À propos",
         "NetProbe © – Couteau suisse réseau\n"
         "Éditeur : Hub Education\n"
-        "Version 1.1.0\n\n"
+        "Version 1.1.5\n\n"
         "• Scan de plage IP (ping parallèle)\n"
         "• Envoi de messages Windows (msg)\n"
         "• Ping, Traceroute, Nslookup\n"
