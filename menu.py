@@ -261,7 +261,6 @@ class App(tk.Tk):
         menu.add_command(label="📄 Exporter CSV", command=self._export_csv)
         menu.add_command(label="🧹 Vider journal", command=self._clear_log)
         menu.add_separator()
-        menu.add_command(label="🔄 Mettre à jour (GitHub Privé)", command=self._open_updater)
         menu.add_command(label="ℹ️ À propos", command=self._show_about)
 
         # Assigner le menu au bouton
@@ -1573,35 +1572,27 @@ class _AboutMixin:
 
 # Remonter _show_about dans la classe App : on le fait via un patch
 def _show_about(self):
-    """Affiche la boîte À propos."""
+    """Affiche la boîte À propos avec le lien vers le dépôt GitHub."""
     messagebox.showinfo(
         "À propos",
-        "MSG Windows – Couteau suisse réseau\n"
-        "Version 1.0\n\n"
+        "NetProbe © – Couteau suisse réseau\n"
+        "Éditeur : Hub Education\n"
+        "Version 1.1.0\n\n"
         "• Scan de plage IP (ping parallèle)\n"
         "• Envoi de messages Windows (msg)\n"
         "• Ping, Traceroute, Nslookup\n"
         "• Infos réseau, Netstat\n"
         "• Scan Proxy / Kwartz\n"
         "• Tracker réseau temps réel\n"
-        "• Export CSV\n\n"
+        "• Arrêt & Redémarrage distant + DNS\n"
+        "• Export CSV & Logs horodatés\n\n"
+        "Dépôt GitHub / Nouvelles versions :\n"
+        "https://github.com/Unfeeling3573/NetProbe\n\n"
         "Python 3 – tkinter – Aucune dépendance externe",
     )
 
 
 App._show_about = _show_about
-
-
-def _open_updater(self):
-    """Ouvre la fenêtre de mise à jour depuis un dépôt GitHub privé."""
-    try:
-        from updater import UpdaterWindow
-        UpdaterWindow(self, current_version="1.0.0")
-    except Exception as e:
-        messagebox.showerror("Erreur", f"Impossible d'ouvrir le module de mise à jour :\n{e}")
-
-
-App._open_updater = _open_updater
 
 
 # ---------------------------------------------------------------------------

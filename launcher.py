@@ -57,7 +57,7 @@ def check_standard_modules():
     """Vérifie que tous les modules de la bibliothèque standard sont présents."""
     modules_requis = [
         "csv", "ipaddress", "queue", "socket", "subprocess",
-        "threading", "concurrent.futures", "datetime", "json", "urllib.request",
+        "threading", "concurrent.futures", "datetime",
     ]
     manquants = []
     for mod in modules_requis:
