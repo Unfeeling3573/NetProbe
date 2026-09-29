@@ -130,11 +130,37 @@ class Scanner:
 
             result = subprocess.run(
                 cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                errors="replace",
                 **extra,
             )
-            return result.returncode == 0
+            if result.returncode != 0:
+                return False
+
+            out = result.stdout.lower()
+
+            # Mots-clés d'échec (Windows renvoie souvent code 0 même en cas d'hôte injoignable)
+            unreachable_keywords = (
+                "unreachable",
+                "impossible",
+                "injoignable",
+                "timed out",
+                "délai d'attente",
+                "delai d'attente",
+                "perte 100%",
+                "100% loss",
+                "100% de perte",
+                "défaillance",
+                "defaillance",
+                "failure",
+            )
+            for kw in unreachable_keywords:
+                if kw in out:
+                    return False
+
+            # Une vraie réponse ICMP d'une machine en ligne contient obligatoirement le TTL
+            return "ttl=" in out
         except Exception:
             return False
 
