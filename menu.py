@@ -198,7 +198,7 @@ class Messenger:
             result = subprocess.run(
                 ["msg", "*", f"/SERVER:{ip}", "/TIME:60", message],
                 capture_output=True,
-                timeout=10,
+                timeout=100,
                 **extra,
             )
             if result.returncode == 0:
